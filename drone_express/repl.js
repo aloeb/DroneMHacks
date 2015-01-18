@@ -23,10 +23,11 @@ var button_10_pressed = false;
 
 //baudrate: 9600
 
-var sPort = new SerialPort("/devttyO2", {baudrate:9600}, true); //for one of the esp's
+var sPort = new SerialPort("/dev/ttyO2", {baudrate:9600}, true); //for one of the esp's
 sPort.on("open", function() {
 	sPort.on('data', function(data) {
 		var i = 0;
+		wifi[0] = {};
 		wifi[0]["index"] = 0;
 		while (i < data.length) {
 			while (i < data.length && data.charAt(i) != '"') { i++ };
@@ -51,6 +52,7 @@ var sPortw = new SerialPort("/dev/ttyO5", {baudrate:9600}, true); //for second o
 sPortw.on("open", function() {
 	sPortw.on('data', function(data) {
 		var i = 0;
+		wifi[1] = {};
 		wifi[1]["index"] = 1;
 		while (i < data.length) {
 			while (i < data.length && data.charAt(i) != '"') { i++ }
@@ -160,6 +162,8 @@ prompt.get(['serial_port_name'], function(err, result){
 			client.down(button_data[7] ? 0.5 : 0);
 		}
 		console.log(wifi);
+		sPort.write("AT+CWLAP");
+		sPortw.write("AT+CWLAP");
 	}, 1000);
 
 
