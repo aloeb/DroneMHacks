@@ -12,6 +12,8 @@ var app = express();
 var bodyParser = require('body-parser');
 var SerialPort = require('serialport').SerialPort;
 var prompt = require("prompt");
+var fs = require("fs");
+var exec = require("child_process").exec;
 app.use(bodyParser.json());
 
 var move = true;
@@ -86,6 +88,11 @@ prompt.get(['serial_port_name'], function(err, result){
 				client.stop();
 				var a = parseFloat(wifi[0][wifiName]);
 				var b = parseFloat(wifi[1][wifiName])
+				var c = parseFloat(wifi[2][wifiName]);
+				fs.writeFile("LCD_content.txt", a + " " + b + " " + c, function(err) {
+					if (err) console.log(err);
+				});
+				exec('python ../LCD_Text_Display.py < LCD_content.txt');
 				if (Math.abs(a - b) > .05) {//change this number to make more or less acurate
 					var angle = Math.acos((Math.pow(a, 2) + Math.pow(b, 2) - 1.0) / (2.0 * a * b)) - Math.PI;
 					if (b < a) {//turn right
