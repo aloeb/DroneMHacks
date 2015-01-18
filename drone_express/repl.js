@@ -1,6 +1,9 @@
 var wifiName = "MHacks";
 var distBetweenWifi = 1; //signal strength from 0 to 1
 
+var beagle = require("beaglebone-io");
+var board = BeagleBone();
+
 var arDrone = require('ar-drone');
 var client  = arDrone.createClient();
 //client.createRepl();
@@ -9,8 +12,81 @@ var app = express();
 var bodyParser = require('body-parser');
 app.use(bodyParser.json());
 
-var keypress = require('keypress');
 var move = true;
+var inair= false;
+
+board.on('ready', function() {
+  this.digitalRead('A5', function(value) {
+    if (!value) {
+      client.stop();
+      if (inair) {
+	client.land();
+	inair = false;
+      } else {
+	client.takeoff();
+	inair = true;
+      }
+    }
+  }
+  if (!move) {
+    this.digitalRead('A0', function(value) {
+      if (!value) {
+	client.stop();
+        client.left(.5);
+      }
+    }
+    this.digitalRead('A1', function(value) {
+      if (!value) {
+	client.stop();
+        client.front(.5);
+      }
+    }
+    this.digitalRead('A2', function(value) {
+      if (!value) {
+	client.stop();
+        client.back(.5);
+      }
+    }
+    this.digitalRead('A3', function(value) {
+      if (!value) {
+	client.stop();
+        client.right(.5);
+      }
+    }
+    this.digitalRead('A4', function(value) {
+      if (!value) {
+        client.stop();
+	move = !move;
+      }
+    }
+    
+    this.digitalRead('0', function(value) {
+      if (!value) {
+        client.stop();
+	client.counterClockwise(.1);
+      }
+    }
+    this.digitalRead('1', function(value) {
+      if (!value) {
+        client.stop();
+	client.up(.5);
+      }
+    }
+    this.digitalRead('2', function(value) {
+      if (!value) {
+        client.stop();
+	client.clockwise(.5);
+      }
+    }
+    this.digitalRead('3', function(value) {
+      if (!value) {
+        client.stop();
+	client.down(.5);
+      }
+    }
+  }
+}
+
 
 var wifi = [{}, {}, {}];
 
@@ -22,38 +98,6 @@ app.post('/logData', function(req, res){
 });
 
 app.listen(process.env.PORT || 3412);
-
-//emergency key press events
-
-// make `process.stdin` begin emitting "keypress" events
-keypress(process.stdin);
-
-// listen for the "keypress" event
-process.stdin.on('keypress', function (ch, key) {
-  console.log('got "keypress"', key);
-  if (key && /*key.ctrl &&*/ key.name == 's') {
-    if (move) {
-      client.stop();
-      move = false;
-    } else {
-      move = true;
-    }
-    //process.stdin.pause();
-  } else if (key && /*key.ctrl &&*/ key.name == 't') {
-    client.takeoff();
-  } else if (key && key.name == 'l') {
-    client.land();
-  } //else if (key && key.name == 'w') {
-  //  client.front(0.2);
-  //  client.after(1000, function() {
-  //    this.front(0);
-  //  });
-  //}
-});
-
-//process.stdin.setRawMode(true);
-//process.stdin.resume();
-
 
 //actual movement
 var sleep = require('sleep');
