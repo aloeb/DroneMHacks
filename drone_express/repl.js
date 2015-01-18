@@ -21,6 +21,56 @@ var button_data = new Array(8);
 var button_9_pressed = false;
 var button_10_pressed = false;
 
+//baudrate: 9600
+
+var sPort = new SerialPort("/devttyO2", {baudrate:9600}, true); //for one of the esp's
+sPort.on("open", function() {
+	sPort.on('data', function(data) {
+		var i = 0;
+		wifi[0]["index"] = 0;
+		while (i < data.length) {
+			while (i < data.length && data.charAt(i) != '"') { i++ };
+			i++;//take care of quotes
+			var temp = "";
+			while (i < data.length && data.charAt(i) != '"') { temp+=data.charAt(i++);}
+			i++;i++;//get rid of " and ,
+			var num = 0.0;
+			if (temp == wifiName) {
+				var temp2 = "";
+				while (i < data.length && data.charAt(i) != ',') { temp2 += data.charAt(i++);}
+				num = parseFloat(temp2)/ (-100.0);
+			}
+			while (i < data.length && data.charAt(i) != '\n') { i++; }
+			wifi[0][temp] = num;
+			i++;
+		}
+	});
+});
+
+var sPortw = new SerialPort("/dev/ttyO5", {baudrate:9600}, true); //for second of the esp's
+sPortw.on("open", function() {
+	sPortw.on('data', function(data) {
+		var i = 0;
+		wifi[1]["index"] = 1;
+		while (i < data.length) {
+			while (i < data.length && data.charAt(i) != '"') { i++ }
+			i++;//take care of quotes
+			var temp = "";
+			while (i < data.length && data.charAt(i) != '"') { temp+=data.charAt(i++);}
+			i++;i++;//get rid of " and ,
+			var num = 0.0;
+			if (temp == wifiName) {
+				var temp2 = "";
+				while (i < data.length && data.charAt(i) != ',') { temp2 += data.charAt(i++);}
+				num = parseFloat(temp2)/ (-100.0);
+			}
+			while (i < data.length && data.charAt(i) != '\n') { i++; }
+			wifi[1][temp] = num;
+			i++;
+		}
+	});
+});
+
 prompt.start();
 prompt.get(['serial_port_name'], function(err, result){
 	if (err) { console.log(err); return 1;}
@@ -39,7 +89,7 @@ prompt.get(['serial_port_name'], function(err, result){
 					if (button < 9) button_data[button]  = dataString.charAt(0) != '~';
 					else if (button == 9) {
 						if (dataString.charAt(0) != '~') {
-							if (!button_9_pressed) move = ~move;
+							if (!button_9_pressed) move = !move;
 							button_9_pressed = true;
 						} else {
 							button_9_pressed = false;
@@ -82,7 +132,7 @@ prompt.get(['serial_port_name'], function(err, result){
 	//actual movement
 	setInterval(function() {
 		if (move) {
-			if ("index" in wifi[0] && "index" in wifi[2]) {
+			if ("index" in wifi[0] && "index" in wifi[1]) {
 				client.stop();
 				var a = parseFloat(wifi[0][wifiName]);
 				var b = parseFloat(wifi[1][wifiName])
@@ -171,7 +221,7 @@ prompt.get(['serial_port_name'], function(err, result){
 	move = !move;
       }
     }
-    
+
     this.digitalRead('0', function(value) {
       if (!value) {
         client.stop();
@@ -198,5 +248,3 @@ prompt.get(['serial_port_name'], function(err, result){
     }
   }
 }*/
-
-
